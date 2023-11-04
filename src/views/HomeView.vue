@@ -1,18 +1,20 @@
 <template>
-  <div class="home">
-    <img alt="Vue logo" src="../assets/logo.png" />
-    <HelloWorld msg="Welcome to Your Vue.js + TypeScript App" />
+  <div class="container mx-auto px-4">
+    <image-resizer />
+    <message-box />
   </div>
 </template>
 
 <script lang="ts">
 import { defineComponent } from "vue";
-import HelloWorld from "@/components/HelloWorld.vue"; // @ is an alias to /src
+import ImageResizer from "@/components/ImageResizer.vue"; // @ is an alias to /src
+import MessageBox from "@/components/MessageBox.vue";
 
 export default defineComponent({
   name: "HomeView",
   components: {
-    HelloWorld,
+    ImageResizer,
+    MessageBox,
   },
 });
 </script>
