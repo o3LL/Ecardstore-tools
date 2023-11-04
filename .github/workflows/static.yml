@@ -38,7 +38,7 @@ jobs:
       - uses: actions/upload-artifact@master
         with:
           name: page
-          path: build
+          path: dist
           if-no-files-found: error
   # Single deploy job since we're just deploying
   deploy:
