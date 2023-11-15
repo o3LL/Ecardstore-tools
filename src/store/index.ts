@@ -1,29 +1,16 @@
-import { createStore } from "vuex";
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-interface State {
-  messages: {
-    status: BigInteger;
-    text: string;
-  }[];
+export interface Message {
+  status: "success" | "error" | "warning";
+  text: string;
 }
 
-export default createStore<State>({
-  state: {
-    messages: [],
-  },
-  mutations: {
-    addMessage(state, message: State["messages"][0]) {
-      state.messages.push(message);
-    },
-  },
-  actions: {
-    addMessage({ commit }, message: string) {
-      commit("addMessage", message);
-    },
-  },
-  getters: {
-    getMessages(state): State["messages"] {
-      return state.messages;
-    },
-  },
+export const useMessageStore = defineStore("message", () => {
+  const messages = ref<Message[]>([]);
+  const addMessage = (message: Message) => {
+    messages.value.push(message);
+  };
+
+  return { messages, addMessage };
 });
