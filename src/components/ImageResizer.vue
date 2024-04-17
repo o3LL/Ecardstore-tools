@@ -1,5 +1,5 @@
 <template>
-  <div class="flex justify-evenly space-x-4">
+  <div class="flex justify-start space-x-4">
     <canvas
       ref="canvasRef"
       id="myCanvas"
@@ -30,8 +30,8 @@ import FileInput from "@/components/inputs/fileInput.vue";
 import FormInput from "@/components/inputs/formInput.vue";
 
 import { onMounted, ref } from "vue";
-import { useStore } from "vuex";
-const store = useStore();
+import { useMessageStore } from "@/store";
+const messageStore = useMessageStore();
 
 const canvasRef = ref<HTMLCanvasElement>();
 let scaleFactor = 1;
@@ -42,12 +42,6 @@ let isNewImage = true;
 
 onMounted(() => {
   drawImageOnCanvas();
-
-  // Test store
-  store.dispatch("addMessage", {
-    status: 1,
-    text: "Test message",
-  });
 });
 
 // draw image on canvas
@@ -118,11 +112,17 @@ function checkImageBackground(
       }
 
       if (isNewImage) {
-        store.dispatch(
-          "addMessage",
+        // Push message to store
+        messageStore.addMessage(
           hasTransparentPixel
-            ? { status: 0, message: "L'image a au moins un pixel transparent." }
-            : { status: 2, message: "L'image n'a pas de pixel transparent." }
+            ? {
+                status: "success",
+                text: "L'image a au moins un pixel transparent.",
+              }
+            : {
+                status: "error",
+                text: "L'image n'a pas de pixel transparent.",
+              }
         );
       }
 
@@ -168,8 +168,7 @@ function zoom(scale: number) {
 }
 
 function saveImage(formData: { [key: string]: string }) {
-  const canvas: HTMLCanvasElement | null = canvasRef.value;
-  console.log(formData);
+  const canvas: HTMLCanvasElement | undefined = canvasRef.value;
   if (!canvas) return;
 
   const link = document.createElement("a");

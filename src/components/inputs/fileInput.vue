@@ -19,7 +19,7 @@
         d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99"
       />
     </svg>
-    {{ rotatingText.value }}...
+    {{ progressBar }}
   </button>
   <input
     v-else
@@ -28,49 +28,69 @@
     class="block w-full text-sm text-slate-500 bg-white rounded p-2"
     @change="handleChange"
   />
-  <div class="flex">
+  <div class="flex justify-center">
     <span class="text-white">Remove background ?</span>
     <input
       type="checkbox"
-      name="bgRemove"
-      id="bgRemove"
-      v-model="shouldRemoveBackground"
+      class="ml-2"
+      v-model="removeBackground"
+      @change="storeSetting"
     />
   </div>
 </template>
 
 <script setup lang="ts">
+import { defineEmits, reactive, ref } from "vue";
 import imglyRemoveBackground from "@imgly/background-removal";
 
-// Push all events to parent
-import { defineEmits, reactive } from "vue";
 const emits = defineEmits(["change"]);
 let isLoading = reactive({ value: false });
 let rotatingText = reactive({ value: "Uploading image" });
 let shouldRemoveBackground = reactive({ value: true });
+let removeBackground = ref(true);
+let progressBar = ref("");
 
-// Rotate text to something fun
-setInterval(() => {
-  const texts = [
-    "Uploading image",
-    "Removing background",
-    "Almost done",
-    "Wait a sec",
-    "One eternity later",
-  ];
-  rotatingText.value = texts[Math.floor(Math.random() * texts.length)];
-}, 2000);
+// Store removeBackground value in localStorage
+// by default, removeBackground is true so we need to check if stored value is false
+removeBackground.value = !(
+  localStorage.getItem("removeBackground") === "false"
+);
+
+const storeSetting = () => {
+  localStorage.setItem("removeBackground", removeBackground.value.toString());
+};
 
 // Handle change event
 async function handleChange(event: Event) {
   const target = event.target as HTMLInputElement;
-  const files = target.files;
-  if (!files) return;
+  if (target.files === null) return;
+
+  const file = target.files[0];
+
+  // If remove background is not checked, just emit the file
+  if (!removeBackground.value) {
+    emits("change", file);
+    return;
+  }
 
   isLoading.value = true;
-  const bgRemoved = await imglyRemoveBackground(await files[0].arrayBuffer());
 
-  console.log(bgRemoved);
+  /** @see: https://github.com/imgly/background-removal-js/blob/main/packages/web-examples/vite-project/src/components/BGRemoval.vue */
+  const bgRemoved = await imglyRemoveBackground(await file.arrayBuffer(), {
+    debug: false,
+    progress: (key: string, current: number, total: number) => {
+      const [type, subtype] = key.split(":");
+      progressBar.value = `${type} ${subtype} ${(
+        (current / total) *
+        100
+      ).toFixed(0)}%`;
+    },
+    output: {
+      quality: 1,
+      type: "foreground",
+      format: "image/webp",
+    },
+  });
 
   if (bgRemoved) {
     emits("change", bgRemoved);

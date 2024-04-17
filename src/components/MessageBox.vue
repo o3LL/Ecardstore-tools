@@ -1,10 +1,10 @@
 <template>
-  <div>
-    <ul>
+  <div class="bg-slate-600 rounded py-4 px-4">
+    <ul class="flex flex-col gap-3">
       <li
         v-for="(message, index) in messages"
         :key="index"
-        :class="`status-${message.status}`"
+        :class="`status-${message.status} text-white rounded p-1`"
       >
         {{ message.text }}
       </li>
@@ -13,48 +13,41 @@
 </template>
 
 <script setup lang="ts">
-import { useStore } from "vuex";
+// get messages from pinia store and display it reactively
+import { useMessageStore } from "@/store";
+const messageStore = useMessageStore();
 
-const store = useStore();
-const messages = store.getters.getMessages;
-
-// Watch for changes in messages
-store.watch(
-  () => store.getters.getMessages,
-  (newMessages) => {
-    messages.value = newMessages;
-  }
-);
+const messages = messageStore.messages;
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 ul {
   list-style: none;
   padding: 0;
   margin: 0;
-}
 
-status-0 {
-  color: green;
+  .status-success {
+    background-color: rgba(0, 255, 0, 0.593);
 
-  ::before {
-    content: "✅";
+    &::before {
+      content: "✅ ";
+    }
   }
-}
 
-status-1 {
-  color: orange;
+  .status-warning {
+    background-color: rgba(255, 166, 0, 0.685);
 
-  ::before {
-    content: "⏳";
+    &::before {
+      content: "⚠️ ";
+    }
   }
-}
 
-status-2 {
-  color: red;
+  .status-error {
+    background-color: rgba(255, 0, 0, 0.558);
 
-  ::before {
-    content: "❌";
+    &::before {
+      content: "❌ ";
+    }
   }
 }
 </style>
