@@ -28,6 +28,15 @@
     class="block w-full text-sm text-slate-500 bg-white rounded p-2"
     @change="handleChange"
   />
+  <div class="flex">
+    <span class="text-white">Remove background ?</span>
+    <input
+      type="checkbox"
+      name="bgRemove"
+      id="bgRemove"
+      v-model="shouldRemoveBackground"
+    />
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -38,6 +47,7 @@ import { defineEmits, reactive } from "vue";
 const emits = defineEmits(["change"]);
 let isLoading = reactive({ value: false });
 let rotatingText = reactive({ value: "Uploading image" });
+let shouldRemoveBackground = reactive({ value: true });
 
 // Rotate text to something fun
 setInterval(() => {
