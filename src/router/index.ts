@@ -2,6 +2,8 @@ import { createRouter, createWebHistory, RouteRecordRaw } from "vue-router";
 import HomeView from "../views/HomeView.vue";
 import RemoveView from "../views/RemoveView.vue";
 
+const BASE_URL = process.env.NODE_ENV === 'production' ? "/Ecardstore-tools/" : "/";
+
 const routes: Array<RouteRecordRaw> = [
   {
     path: "/",
@@ -9,12 +11,12 @@ const routes: Array<RouteRecordRaw> = [
     component: HomeView,
   },
   {
-    path: "/remove",
+    path: BASE_URL + "remove",
     name: "remove",
     component: RemoveView,
   },
   {
-    path: "/about",
+    path: BASE_URL + "about",
     name: "about",
     // route level code-splitting
     // this generates a separate chunk (about.[hash].js) for this route
