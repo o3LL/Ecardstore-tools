@@ -3,7 +3,7 @@ import HomeView from "../views/HomeView.vue";
 import RemoveView from "../views/RemoveView.vue";
 
 const BASE_URL =
-  process.env.NODE_ENV === "production" ? "/Ecardstore-tools/" : "/";
+  process.env.NODE_ENV === "production" ? "/" : "/";
 
 const routes: Array<RouteRecordRaw> = [
   {
