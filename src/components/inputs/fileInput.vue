@@ -41,7 +41,7 @@
 
 <script setup lang="ts">
 import { defineEmits, reactive, ref } from "vue";
-import imglyRemoveBackground from "@imgly/background-removal";
+import { removeBackground as imglyRemoveBackground } from "@imgly/background-removal";
 
 const emits = defineEmits(["change"]);
 let isLoading = reactive({ value: false });
@@ -87,7 +87,6 @@ async function handleChange(event: Event) {
     },
     output: {
       quality: 1,
-      type: "foreground",
       format: "image/webp",
     },
   });
