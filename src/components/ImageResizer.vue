@@ -29,16 +29,49 @@ import BtnInput from "@/components/inputs/btnInput.vue";
 import FileInput from "@/components/inputs/fileInput.vue";
 import FormInput from "@/components/inputs/formInput.vue";
 
-import { onMounted, ref } from "vue";
+import { useImageStore } from "@/store";
 import { useMessageStore } from "@/store";
-const messageStore = useMessageStore();
+import { onMounted, ref } from "vue";
 
+const imageStore = useImageStore();
+const messageStore = useMessageStore();
 const canvasRef = ref<HTMLCanvasElement>();
-let scaleFactor = 1;
-let image: HTMLImageElement | null = null;
-let offsetX = 0;
-let offsetY = 0;
-let isNewImage = true;
+
+// Extract canvas logic to composable
+const useCanvas = () => {
+  const drawImage = () => {
+    const canvas = canvasRef.value;
+    const ctx = canvas?.getContext("2d");
+    if (!canvas || !ctx || !imageStore.image) return;
+
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const imageWidth = imageStore.image.width * imageStore.scaleFactor;
+    const imageHeight = imageStore.image.height * imageStore.scaleFactor;
+
+    imageStore.offsetX = (canvasWidth - imageWidth) / 2;
+    imageStore.offsetY = (canvasHeight - imageHeight) / 2;
+
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
+    checkImageBackground(
+      canvas,
+      imageStore.offsetX,
+      imageStore.offsetY,
+      imageWidth,
+      imageHeight
+    );
+    drawBackground(canvas, ctx);
+    ctx.drawImage(
+      imageStore.image,
+      imageStore.offsetX,
+      imageStore.offsetY,
+      imageWidth,
+      imageHeight
+    );
+  };
+
+  return { drawImage };
+};
 
 onMounted(() => {
   drawImageOnCanvas();
@@ -52,23 +85,39 @@ function drawImageOnCanvas() {
   if (canvas && ctx) {
     const canvasWidth = canvas.width;
     const canvasHeight = canvas.height;
-    const imageWidth = (image && image.width * scaleFactor) || 0;
-    const imageHeight = (image && image.height * scaleFactor) || 0;
+    const imageWidth =
+      (imageStore.image && imageStore.image.width * imageStore.scaleFactor) ||
+      0;
+    const imageHeight =
+      (imageStore.image && imageStore.image.height * imageStore.scaleFactor) ||
+      0;
 
-    offsetX = (canvasWidth - imageWidth) / 2;
-    offsetY = (canvasHeight - imageHeight) / 2;
+    imageStore.offsetX = (canvasWidth - imageWidth) / 2;
+    imageStore.offsetY = (canvasHeight - imageHeight) / 2;
 
     ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
     // check image background
-    checkImageBackground(canvas, offsetX, offsetY, imageWidth, imageHeight);
+    checkImageBackground(
+      canvas,
+      imageStore.offsetX,
+      imageStore.offsetY,
+      imageWidth,
+      imageHeight
+    );
 
     // draw background
     drawBackground(canvas, ctx);
 
-    if (!image) return;
+    if (!imageStore.image) return;
 
-    ctx.drawImage(image, offsetX, offsetY, imageWidth, imageHeight);
+    ctx.drawImage(
+      imageStore.image,
+      imageStore.offsetX,
+      imageStore.offsetY,
+      imageWidth,
+      imageHeight
+    );
   }
 }
 
@@ -93,7 +142,7 @@ function checkImageBackground(
   imageWidth: number,
   imageHeight: number
 ) {
-  if (canvas && image) {
+  if (canvas && imageStore.image) {
     const ctx = canvas.getContext("2d");
     if (ctx) {
       const imageData = ctx.getImageData(
@@ -111,7 +160,7 @@ function checkImageBackground(
         }
       }
 
-      if (isNewImage) {
+      if (imageStore.isNewImage) {
         // Push message to store
         messageStore.addMessage(
           hasTransparentPixel
@@ -126,24 +175,24 @@ function checkImageBackground(
         );
       }
 
-      isNewImage = false;
+      imageStore.isNewImage = false;
     }
   }
 }
 
-function handleImageUpload(file: File) {
+function handleImageUpload(file: File | Blob) {
   const reader = new FileReader();
   reader.onload = (e) => {
     const img = new Image();
     img.onload = () => {
-      image = img;
+      imageStore.setImage(img);
       // Resize image to not excend canvas size
       const canvas = canvasRef.value;
-      if (canvas && image) {
+      if (canvas && img) {
         const canvasWidth = canvas.width;
         const canvasHeight = canvas.height;
-        const imageWidth = image.width;
-        const imageHeight = image.height;
+        const imageWidth = img.width;
+        const imageHeight = img.height;
 
         if (imageWidth > canvasWidth || imageHeight > canvasHeight) {
           const ratio = Math.min(
@@ -151,7 +200,7 @@ function handleImageUpload(file: File) {
             canvasHeight / imageHeight
           );
 
-          scaleFactor = ratio;
+          imageStore.scaleFactor = ratio;
         }
       }
 
@@ -163,7 +212,7 @@ function handleImageUpload(file: File) {
 }
 
 function zoom(scale: number) {
-  scaleFactor *= scale;
+  imageStore.scaleFactor *= scale;
   drawImageOnCanvas();
 }
 
